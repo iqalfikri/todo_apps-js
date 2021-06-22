@@ -1,6 +1,7 @@
 //variable global ambil id todos
 const UNCOMPLETED_LIST_TODO_ID = "todos";
 const COMPLETED_LIST_TODO_ID = "completed-todos";
+const TODO_ITEMID = "itemId";
 
 function addTodo() {
     //ambil id todos dari konstant
@@ -13,8 +14,15 @@ function addTodo() {
     const timestamp = document.getElementById("date").value;
     
     //tampilkan todo
-    const todo = makeTodo(textTodo, timestamp);
+    const todo = makeTodo(textTodo, timestamp, false);
+
+    const todoObject = composeTodoObject(textTodo, timestamp, false);
+
+    todo[TODO_ITEMID] = todoObject.id;
+    todos.push(todoObject);
+
     uncompletedTODOList.append(todo);
+    updateDataToStorage();
 }
 
 function makeTodo(data, timestamp, isCompleted) {
@@ -73,9 +81,17 @@ function addTaskToCompleted(taskElement) {
     const taskTimestamp = taskElement.querySelector(".inner > p").innerText;
 
     const newTodo = makeTodo(taskTitle , taskTimestamp, true);
+
+    const todo = findTodo(taskElement[TODO_ITEMID]);
+    todo.isCompleted = true;
+    newTodo[TODO_ITEMID] = todo.id;
+
     const listCompleted = document.getElementById(COMPLETED_LIST_TODO_ID);
+
     listCompleted.append(newTodo);
     taskElement.remove();
+
+    updateDataToStorage();
 }
 
 function undoTaskFromCompleted(taskElement) {
@@ -84,12 +100,41 @@ function undoTaskFromCompleted(taskElement) {
     const taskTimestamp = taskElement.querySelector(".inner > p").innerText;
  
     const newTodo = makeTodo(taskTitle, taskTimestamp, false);
+
+    const todo = findTodo(taskElement[TODO_ITEMID]);
+    todo.isCompleted = false;
+    newTodo[TODO_ITEMID] = todo.id;
  
     listUncompleted.append(newTodo);
     taskElement.remove();
+
+    updateDataToStorage();
 }
 
 function removeTaskFromCompleted(taskElement) {
+    //cari posisi todo di index ke berapa
+    const todoPosition = findTodoIndex(taskElement[TODO_ITEMID]);
+    //hapus todo
+    todos.splice(todoPosition, 1)
+
     taskElement.remove();
+    updateDataToStorage();
 }
 
+function refreshDataFromTodos() {
+    const listUncompleted = document.getElementById(UNCOMPLETED_LIST_TODO_ID);
+    let listCompleted = document.getElementById(COMPLETED_LIST_TODO_ID);
+
+
+    for (todo of todos) {
+        const newTodo = makeTodo(todo.task, todo.timestamp, todo.isCompleted);
+        newTodo[TODO_ITEMID] = todo.id;
+
+        if (todo.isCompleted) {
+            listCompleted.append(newTodo);
+        } else {
+            listUncompleted.append(newTodo);
+        }
+         
+    }
+}
